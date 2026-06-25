@@ -237,27 +237,25 @@ tabs = st.tabs(["📊 Overview", "🏬 Stores", "🎯 Tiers & Products", "🕐 H
 
 # ============================================================== OVERVIEW
 with tabs[0]:
-    r1 = st.columns(4)
-    r1[0].metric("Total bills", f"{total_bills:,}")
-    r1[1].metric("Bills ≥ ₹149", f"{bills_ge149:,}",
-                 help="Qualifying purchases ≥₹149 (excludes separate GSC gift bills). "
-                      "= GSC + Rewards + Other + No-coupon.")
-    r1[2].metric("GSC gift redeemed", f"{n_gsc:,}", help="Separate gift bills (the reward)")
-    r1[3].metric("Redemption rate", f"{redempt_rate:.1f}%", help="GSC gift ÷ qualifying bills ≥ ₹149")
+    st.markdown("#### 📦 Bills & qualifying base")
+    a = st.columns(5)
+    a[0].metric("Total bills", f"{total_bills:,}")
+    a[1].metric("Bills ≥ ₹149", f"{bills_ge149:,}",
+                help="Qualifying purchases ≥₹149 (excludes separate GSC gift bills). "
+                     "= GSC + Rewards + Other + No-coupon.")
+    a[2].metric("No-coupon bills", f"{n_none:,}",
+                help="Qualifying ≥₹149 purchases that availed nothing "
+                     "(GSC redeemers + Rewards + Other removed).")
+    a[3].metric("Rewards coupon", f"{n_rew:,}")
+    a[4].metric("Other coupon", f"{n_oth:,}")
 
-    r2 = st.columns(4)
-    r2[0].metric("Rewards coupon", f"{n_rew:,}")
-    r2[1].metric("Other coupon", f"{n_oth:,}")
-    r2[2].metric("Free products", f"{n_free:,}")
-    r2[3].metric("Discounted products", f"{n_disc:,}")
-
-    r3 = st.columns(4)
-    r3[0].metric("₹ collected (gift bills)", f"₹{collected:,.0f}")
-    r3[1].metric("No-coupon bills", f"{n_none:,}",
-                 help="Qualifying ≥₹149 purchases that availed nothing "
-                      "(GSC redeemers + Rewards + Other removed).")
-    r3[2].metric("New-patient bills", f"{int((f['patient_type']=='New').sum()):,}")
-    r3[3].metric("Walking bills", f"{int((f['order_type']=='Walking').sum()):,}")
+    st.markdown("#### 🎁 GSC gift redemptions")
+    b = st.columns(5)
+    b[0].metric("GSC gift redeemed", f"{n_gsc:,}", help="Separate gift bills (the reward)")
+    b[1].metric("Redemption rate", f"{redempt_rate:.1f}%", help="GSC gift ÷ qualifying bills ≥ ₹149")
+    b[2].metric("Free products", f"{n_free:,}")
+    b[3].metric("Discounted products", f"{n_disc:,}")
+    b[4].metric("₹ collected (gift bills)", f"₹{collected:,.0f}")
 
     st.markdown("---")
     c1, c2 = st.columns(2)
