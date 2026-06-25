@@ -1,0 +1,242 @@
+{
+  "502940": {
+    "name": "Electroaid Sachet 21.8gm",
+    "tier": "ZGA",
+    "threshold": 149
+  },
+  "509949": {
+    "name": "Aciheal Lemon Powder 5gm",
+    "tier": "ZGA",
+    "threshold": 149
+  },
+  "399625": {
+    "name": "Belladonna Plaster 1s",
+    "tier": "ZGA",
+    "threshold": 149
+  },
+  "408951": {
+    "name": "Pudina Plus Capsule 10s",
+    "tier": "ZGA",
+    "threshold": 149
+  },
+  "520217": {
+    "name": "Skinn Pleasure Series Dotted Chocolate Condom 3 s",
+    "tier": "ZGA",
+    "threshold": 149
+  },
+  "489439": {
+    "name": "Goodhale Capsule 10s",
+    "tier": "ZGA",
+    "threshold": 149
+  },
+  "502937": {
+    "name": "Electroaid Orange Liquid 200ml",
+    "tier": "ZGB",
+    "threshold": 249
+  },
+  "519612": {
+    "name": "Goodaid Inhaler with key chain 1s",
+    "tier": "ZGB",
+    "threshold": 249
+  },
+  "755858": {
+    "name": "Goodaid Pain Relief Gel 30gm",
+    "tier": "ZGB",
+    "threshold": 249
+  },
+  "509948": {
+    "name": "Germiaid Antiseptic Liquid 50ml",
+    "tier": "ZGB",
+    "threshold": 249
+  },
+  "754519": {
+    "name": "Bombay Shaving Caring Aloevera Sensi Stud Razor 1s",
+    "tier": "ZGB",
+    "threshold": 249
+  },
+  "501336": {
+    "name": "Goodvion 400mg Capsule 10s",
+    "tier": "ZGB",
+    "threshold": 249
+  },
+  "519534": {
+    "name": "Goodaid Mouthwash 100ml",
+    "tier": "ZGC",
+    "threshold": 349
+  },
+  "504824": {
+    "name": "Maxiaid Capsule 10s",
+    "tier": "ZGC",
+    "threshold": 349
+  },
+  "755635": {
+    "name": "Goodaid Vaporizing Rub 25ml",
+    "tier": "ZGC",
+    "threshold": 349
+  },
+  "410553": {
+    "name": "Nil Anti Crack Cream 20gm",
+    "tier": "ZGC",
+    "threshold": 349
+  },
+  "406892": {
+    "name": "Neem Guard Soap 75gm",
+    "tier": "ZGC",
+    "threshold": 349
+  },
+  "410217": {
+    "name": "Cofsils Orange Lozenges 10 s",
+    "tier": "ZGC",
+    "threshold": 349
+  },
+  "495970": {
+    "name": "Povigood Gargle 100ml",
+    "tier": "ZGD",
+    "threshold": 499
+  },
+  "504826": {
+    "name": "Ayuaid Adulsa Cough Syrup 120ml",
+    "tier": "ZGD",
+    "threshold": 499
+  },
+  "509947": {
+    "name": "Calagood Lotion 125ml- Gaid",
+    "tier": "ZGD",
+    "threshold": 499
+  },
+  "495969": {
+    "name": "Clotriaid Dusting Powder 100gm",
+    "tier": "ZGD",
+    "threshold": 499
+  },
+  "444111": {
+    "name": "Viopatch Herbal Pain Relief Patch 75cm Large",
+    "tier": "ZGD",
+    "threshold": 499
+  },
+  "509048": {
+    "name": "Mosqaid Mosquito Repellent Cream 50gm",
+    "tier": "ZGD",
+    "threshold": 499
+  },
+  "758177": {
+    "name": "Germiaid Antiseptic Liquid 100ml",
+    "tier": "ZGE",
+    "threshold": 699
+  },
+  "407054": {
+    "name": "Medicadent Paste 50gm",
+    "tier": "ZGE",
+    "threshold": 699
+  },
+  "520221": {
+    "name": "Skinn Pleasure Series Dotted Chocolate Condom 10s",
+    "tier": "ZGE",
+    "threshold": 699
+  },
+  "755860": {
+    "name": "Goodaid Pain Relief Gel 75gm",
+    "tier": "ZGE",
+    "threshold": 699
+  },
+  "499171": {
+    "name": "Storia Tender Coconut Water 180ml",
+    "tier": "ZGE",
+    "threshold": 699
+  },
+  "759272": {
+    "name": "Alo Frut Litchi Juice 300ml",
+    "tier": "ZGE",
+    "threshold": 699
+  },
+  "508177": {
+    "name": "Good Relief Roll On 50ml",
+    "tier": "ZGF",
+    "threshold": 999
+  },
+  "29733": {
+    "name": "Clinsol Anti Acne Soap 75gm",
+    "tier": "ZGF",
+    "threshold": 999
+  },
+  "519611": {
+    "name": "Goodaid Crepe Bandage 6 CM X 4 M 1s",
+    "tier": "ZGF",
+    "threshold": 999
+  },
+  "754529": {
+    "name": "Casper Natural Camphor Agarbatti Sticks 30 s",
+    "tier": "ZGF",
+    "threshold": 999
+  },
+  "759393": {
+    "name": "Zeno Essential Hand Wash Aqua Blue 250 ml",
+    "tier": "ZGF",
+    "threshold": 999
+  },
+  "500093": {
+    "name": "Lacto Calamine Daily Cleansing Wipes 25s",
+    "tier": "ZGF",
+    "threshold": 999
+  },
+  "754858": {
+    "name": "Goodaid Crepe Bandage 8cm X 4m 1s",
+    "tier": "ZGG",
+    "threshold": 1599
+  },
+  "515606": {
+    "name": "Goodaid Protein Chocolate Powder 200gm",
+    "tier": "ZGG",
+    "threshold": 1599
+  },
+  "410184": {
+    "name": "Knoll Sun Screen Lotion 60ml",
+    "tier": "ZGG",
+    "threshold": 1599
+  },
+  "754396": {
+    "name": "Goodaid Pain Relief Spray 75gm",
+    "tier": "ZGG",
+    "threshold": 1599
+  },
+  "398933": {
+    "name": "Skinshine Fairness Soap 75gm",
+    "tier": "ZGG",
+    "threshold": 1599
+  },
+  "411871": {
+    "name": "Sensogel F Gel 100gm",
+    "tier": "ZGG",
+    "threshold": 1599
+  },
+  "754764": {
+    "name": "Bombay Shaving Company Coffee Face Wash 50gm",
+    "tier": "ZGH",
+    "threshold": 1999
+  },
+  "520236": {
+    "name": "Goodaid Sugar Free Pellets 300s",
+    "tier": "ZGH",
+    "threshold": 1999
+  },
+  "754868": {
+    "name": "Goodaid Crepe Bandage 10cm X 4m 1s",
+    "tier": "ZGH",
+    "threshold": 1999
+  },
+  "520668": {
+    "name": "Goodaid Digital Thermometer 1s",
+    "tier": "ZGH",
+    "threshold": 1999
+  },
+  "758178": {
+    "name": "Germiaid Antiseptic Liquid 500ml",
+    "tier": "ZGH",
+    "threshold": 1999
+  },
+  "506305": {
+    "name": "Softsens Baby Wipes 72s",
+    "tier": "ZGH",
+    "threshold": 1999
+  }
+}

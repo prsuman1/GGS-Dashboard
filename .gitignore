@@ -1,0 +1,15 @@
+# Secrets — never commit
+.env
+.streamlit/secrets.toml
+
+# Note: data/ is intentionally committed so the deployed app runs standalone.
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / editor
+.DS_Store
+.ipynb_checkpoints/
