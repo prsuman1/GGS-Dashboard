@@ -13,3 +13,6 @@ __pycache__/
 # OS / editor
 .DS_Store
 .ipynb_checkpoints/
+
+# QC harness (local only)
+qc_check.py

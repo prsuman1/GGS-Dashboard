@@ -219,7 +219,7 @@ cc = f["coupon_cat"].value_counts().to_dict()
 n_gsc = cc.get("GSC", 0)
 n_rew = cc.get("Rewards", 0)
 n_oth = cc.get("Other", 0)
-n_none = cc.get("None", 0)
+n_none = int(((f["coupon_cat"] == "None") & (f["bill_total"] >= 149)).sum())
 n_free = int((gift["gift_is_free"] == True).sum())
 n_disc = int((gift["gift_is_free"] == False).sum())
 collected = float(pd.to_numeric(gift["gift_net_payable"], errors="coerce").fillna(0).sum())
@@ -265,6 +265,7 @@ with tabs[0]:
         fig.update_traces(textinfo="label+value")
         fig.update_layout(showlegend=False, margin=dict(t=10, b=10, l=10, r=10), height=320)
         st.plotly_chart(fig, width="stretch")
+        st.caption("None = bills ≥ ₹149 with no coupon (GSC/Rewards/Other are all bills).")
     with c2:
         section("Gift pick: Free vs Discounted")
         if n_free + n_disc:
@@ -294,10 +295,10 @@ with tabs[1]:
             "GSC Red %": round(gsc_n / ge149 * 100, 1) if ge149 else 0.0,
             "Rewards": int((grp.coupon_cat == "Rewards").sum()),
             "Other": int((grp.coupon_cat == "Other").sum()),
-            "No coupon": int((grp.coupon_cat == "None").sum()),
+            "No coupon": int(((grp.coupon_cat == "None") & (grp.bill_total >= 149)).sum()),
             "Free": int((gg.gift_is_free == True).sum()),
             "Disc": int((gg.gift_is_free == False).sum()),
-            "₹ collected": round(float(pd.to_numeric(gg.gift_net_payable, errors="coerce").fillna(0).sum())),
+            "₹ collected": float(pd.to_numeric(gg.gift_net_payable, errors="coerce").fillna(0).sum()),
         })
     sdf = pd.DataFrame(rows).sort_values("GSC gift", ascending=False).reset_index(drop=True)
     sdf["ID"] = sdf["ID"].astype(str)
@@ -309,8 +310,13 @@ with tabs[1]:
     sdf_disp = pd.concat([sdf, pd.DataFrame([total_row])], ignore_index=True)
     st.dataframe(
         sdf_disp, width="stretch", hide_index=True,
-        column_config={"GSC Red %": st.column_config.NumberColumn(
-            "GSC Red %", help="GSC gift ÷ Bills ≥149", format="%.1f%%")},
+        column_config={
+            "GSC Red %": st.column_config.NumberColumn(
+                "GSC Red %", help="GSC gift ÷ Bills ≥149", format="%.1f%%"),
+            "No coupon": st.column_config.NumberColumn(
+                "No coupon", help="Bills ≥₹149 that used no coupon"),
+            "₹ collected": st.column_config.NumberColumn("₹ collected", format="₹%.0f"),
+        },
     )
     st.download_button("⬇ Download store-wise report (CSV)",
                        sdf.to_csv(index=False).encode(), "store_wise_report.csv", "text/csv")
