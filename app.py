@@ -7,6 +7,7 @@ Reads ONLY the local snapshot (data/gsc_bills.parquet). Refresh it with
 """
 import hmac
 import json
+import os
 from datetime import date
 from pathlib import Path
 
@@ -50,11 +51,32 @@ st.markdown(
 # ------------------------------------------------------------------ auth
 @st.cache_data
 def load_credentials():
-    """Load dashboard logins from the project .env (DASH_USER{n}/DASH_PASS{n})."""
-    env = dotenv_values(ENV_PATH)
-    creds, i = {}, 1
-    while env.get(f"DASH_USER{i}"):
-        creds[env[f"DASH_USER{i}"]] = env.get(f"DASH_PASS{i}", "")
+    """Load dashboard logins from any available source: Streamlit Cloud secrets,
+    environment variables, or the local .env. Two formats are accepted:
+
+      A) Combined:  DASHBOARD_USER_1 = "Manish:IamHero"   (key contains USER, value is user:pass)
+      B) Indexed:   DASH_USER1 = "Manish"  /  DASH_PASS1 = "IamHero"
+    """
+    sources = {}
+    try:                       # Streamlit Cloud secrets (raises locally if none)
+        sources.update(dict(st.secrets))
+    except Exception:
+        pass
+    sources.update(os.environ)
+    if ENV_PATH.exists():      # local .env
+        sources.update({k: v for k, v in dotenv_values(ENV_PATH).items() if v is not None})
+
+    creds = {}
+    # Format A — "username:password" in any DASH*USER* key
+    for key, val in sources.items():
+        ku = str(key).upper()
+        if ku.startswith("DASH") and "USER" in ku and isinstance(val, str) and ":" in val:
+            user, pwd = val.split(":", 1)
+            creds[user.strip()] = pwd
+    # Format B — indexed DASH_USER{n} / DASH_PASS{n}
+    i = 1
+    while sources.get(f"DASH_USER{i}"):
+        creds.setdefault(sources[f"DASH_USER{i}"], sources.get(f"DASH_PASS{i}", ""))
         i += 1
     return creds
 
