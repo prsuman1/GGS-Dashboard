@@ -284,11 +284,14 @@ with tabs[1]:
     rows = []
     for (sid, sname), grp in g:
         gg = grp[grp.coupon_cat == "GSC"]
+        ge149 = int((grp.bill_total >= 149).sum())
+        gsc_n = int((grp.coupon_cat == "GSC").sum())
         rows.append({
             "Store": sname, "ID": sid,
             "Total bills": len(grp),
-            "Bills ≥149": int((grp.bill_total >= 149).sum()),
-            "GSC gift": int((grp.coupon_cat == "GSC").sum()),
+            "Bills ≥149": ge149,
+            "GSC gift": gsc_n,
+            "GSC Red %": round(gsc_n / ge149 * 100, 1) if ge149 else 0.0,
             "Rewards": int((grp.coupon_cat == "Rewards").sum()),
             "Other": int((grp.coupon_cat == "Other").sum()),
             "No coupon": int((grp.coupon_cat == "None").sum()),
@@ -300,8 +303,15 @@ with tabs[1]:
     sdf["ID"] = sdf["ID"].astype(str)
     total_row = {c: sdf[c].sum() if sdf[c].dtype != object else "" for c in sdf.columns}
     total_row["Store"] = "TOTAL"; total_row["ID"] = ""
+    # Redemption % on the TOTAL row must be recomputed from totals, not summed.
+    tg, te = sdf["GSC gift"].sum(), sdf["Bills ≥149"].sum()
+    total_row["GSC Red %"] = round(tg / te * 100, 1) if te else 0.0
     sdf_disp = pd.concat([sdf, pd.DataFrame([total_row])], ignore_index=True)
-    st.dataframe(sdf_disp, width="stretch", hide_index=True)
+    st.dataframe(
+        sdf_disp, width="stretch", hide_index=True,
+        column_config={"GSC Red %": st.column_config.NumberColumn(
+            "GSC Red %", help="GSC gift ÷ Bills ≥149", format="%.1f%%")},
+    )
     st.download_button("⬇ Download store-wise report (CSV)",
                        sdf.to_csv(index=False).encode(), "store_wise_report.csv", "text/csv")
 
