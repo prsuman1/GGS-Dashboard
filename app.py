@@ -215,12 +215,12 @@ if f.empty:
 # ------------------------------------------------------------------ KPI helpers
 total_bills = len(f)
 # GSC gift bills are SEPARATE redemption bills (earned by a qualifying purchase),
-# so the qualifying base = purchase bills ≥₹149 that are NOT GSC gift bills.
+# so the qualifying base = purchase bills with NET-PAYABLE ≥₹149 that are NOT GSC gift bills.
 purch = f[f["coupon_cat"] != "GSC"]
-bills_ge149 = int((purch["bill_total"] >= 149).sum())            # qualifying purchases
+bills_ge149 = int((purch["net_payable"] >= 149).sum())           # qualifying purchases (net-payable)
 n_gsc = int((f["coupon_cat"] == "GSC").sum())                    # gift redemptions
-n_rew = int(((f["coupon_cat"] == "Rewards") & (f["bill_total"] >= 149)).sum())
-n_oth = int(((f["coupon_cat"] == "Other") & (f["bill_total"] >= 149)).sum())
+n_rew = int(((f["coupon_cat"] == "Rewards") & (f["net_payable"] >= 149)).sum())
+n_oth = int(((f["coupon_cat"] == "Other") & (f["net_payable"] >= 149)).sum())
 # A qualifying purchase either redeemed GSC, used Rewards/Other, or availed nothing.
 n_none = max(0, bills_ge149 - n_gsc - n_rew - n_oth)            # availed nothing
 n_free = int((gift["gift_is_free"] == True).sum())
@@ -241,10 +241,10 @@ with tabs[0]:
     a = st.columns(5)
     a[0].metric("Total bills", f"{total_bills:,}")
     a[1].metric("Bills ≥ ₹149", f"{bills_ge149:,}",
-                help="Qualifying purchases ≥₹149 (excludes separate GSC gift bills). "
+                help="Qualifying purchases with net-payable ≥₹149 (excludes separate GSC gift bills). "
                      "= GSC + Rewards + Other + No-coupon.")
     a[2].metric("No-coupon bills", f"{n_none:,}",
-                help="Qualifying ≥₹149 purchases that availed nothing "
+                help="Qualifying (net-payable ≥₹149) purchases that availed nothing "
                      "(GSC redeemers + Rewards + Other removed).")
     a[3].metric("Rewards coupon", f"{n_rew:,}")
     a[4].metric("Other coupon", f"{n_oth:,}")
@@ -253,9 +253,10 @@ with tabs[0]:
     rg_rate = ((n_rew + n_gsc) / bills_ge149 * 100) if bills_ge149 else 0
     b = st.columns(6)
     b[0].metric("GSC gift redeemed", f"{n_gsc:,}", help="Separate gift bills (the reward)")
-    b[1].metric("Redemption rate", f"{redempt_rate:.1f}%", help="GSC gift ÷ qualifying bills ≥ ₹149")
+    b[1].metric("Redemption rate", f"{redempt_rate:.1f}%",
+                help="GSC gift ÷ qualifying bills (net-payable ≥ ₹149)")
     b[2].metric("Rewards + GSC Red %", f"{rg_rate:.1f}%",
-                help="(Rewards coupon + GSC gift) ÷ qualifying bills ≥ ₹149")
+                help="(Rewards coupon + GSC gift) ÷ qualifying bills (net-payable ≥ ₹149)")
     b[3].metric("Free products", f"{n_free:,}")
     b[4].metric("Discounted products", f"{n_disc:,}")
     b[5].metric("₹ collected (gift bills)", f"₹{collected:,.0f}")
@@ -273,7 +274,7 @@ with tabs[0]:
         fig.update_traces(textinfo="label+value")
         fig.update_layout(showlegend=False, margin=dict(t=10, b=10, l=10, r=10), height=320)
         st.plotly_chart(fig, width="stretch")
-        st.caption("Split of qualifying purchases ≥ ₹149: GSC = redeemed a gift (separate bill), "
+        st.caption("Split of qualifying purchases (net-payable ≥ ₹149): GSC = redeemed a gift (separate bill), "
                    "None = availed nothing. These add up to Bills ≥ ₹149.")
     with c2:
         section("Gift pick: Free vs Discounted")
@@ -295,10 +296,10 @@ with tabs[1]:
     for (sid, sname), grp in g:
         gg = grp[grp.coupon_cat == "GSC"]
         purch = grp[grp.coupon_cat != "GSC"]                       # gift bills are separate
-        ge149 = int((purch.bill_total >= 149).sum())              # qualifying purchases
+        ge149 = int((purch.net_payable >= 149).sum())             # qualifying purchases (net-payable)
         gsc_n = int((grp.coupon_cat == "GSC").sum())
-        rew_n = int(((grp.coupon_cat == "Rewards") & (grp.bill_total >= 149)).sum())
-        oth_n = int(((grp.coupon_cat == "Other") & (grp.bill_total >= 149)).sum())
+        rew_n = int(((grp.coupon_cat == "Rewards") & (grp.net_payable >= 149)).sum())
+        oth_n = int(((grp.coupon_cat == "Other") & (grp.net_payable >= 149)).sum())
         none_n = max(0, ge149 - gsc_n - rew_n - oth_n)            # availed nothing
         rows.append({
             "Store": sname, "ID": sid,
@@ -327,14 +328,14 @@ with tabs[1]:
         sdf_disp, width="stretch", hide_index=True,
         column_config={
             "GSC Red %": st.column_config.NumberColumn(
-                "GSC Red %", help="GSC gift ÷ qualifying Bills ≥149", format="%.1f%%"),
+                "GSC Red %", help="GSC gift ÷ qualifying Bills (net-payable ≥149)", format="%.1f%%"),
             "Rew+GSC Red %": st.column_config.NumberColumn(
-                "Rew+GSC Red %", help="(Rewards + GSC gift) ÷ qualifying Bills ≥149", format="%.1f%%"),
+                "Rew+GSC Red %", help="(Rewards + GSC gift) ÷ qualifying Bills (net-payable ≥149)", format="%.1f%%"),
             "Bills ≥149": st.column_config.NumberColumn(
-                "Bills ≥149", help="Qualifying purchases ≥₹149 (excl. separate GSC gift bills) "
+                "Bills ≥149", help="Qualifying purchases with net-payable ≥₹149 (excl. separate GSC gift bills) "
                                    "= GSC + Rewards + Other + No coupon"),
             "No coupon": st.column_config.NumberColumn(
-                "No coupon", help="Qualifying ≥149 purchases that availed nothing"),
+                "No coupon", help="Qualifying (net-payable ≥149) purchases that availed nothing"),
             "₹ collected": st.column_config.NumberColumn("₹ collected", format="₹%.0f"),
         },
     )
@@ -403,10 +404,10 @@ with tabs[3]:
     hr = f.groupby("bill_hour").apply(
         lambda g: pd.Series({
             "Total bills": len(g),
-            "Bills ≥149": int(((g.coupon_cat != "GSC") & (g.bill_total >= 149)).sum()),
+            "Bills ≥149": int(((g.coupon_cat != "GSC") & (g.net_payable >= 149)).sum()),
             "GSC gift": int((g.coupon_cat == "GSC").sum()),
-            "Rewards": int(((g.coupon_cat == "Rewards") & (g.bill_total >= 149)).sum()),
-            "Other": int(((g.coupon_cat == "Other") & (g.bill_total >= 149)).sum()),
+            "Rewards": int(((g.coupon_cat == "Rewards") & (g.net_payable >= 149)).sum()),
+            "Other": int(((g.coupon_cat == "Other") & (g.net_payable >= 149)).sum()),
         }), include_groups=False
     ).reset_index().rename(columns={"bill_hour": "Hour"})
     hr["Hour"] = hr["Hour"].apply(lambda h: f"{int(h):02d}:00")

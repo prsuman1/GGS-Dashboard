@@ -208,7 +208,8 @@ def build(date_from, date_to):
     )
 
     out_cols = [
-        "bill_id", "bill_date", "bill_hour", "store_id", "store_name", "bill_total",
+        "bill_id", "bill_date", "bill_hour", "store_id", "store_name",
+        "bill_total", "net_payable",
         "coupon_cat", "order_type", "patient_type", "is_gift",
         "gift_segment", "gift_tier", "gift_threshold",
         "gift_product_id", "gift_product_name", "gift_product_tier",
