@@ -213,7 +213,7 @@ if f.empty:
     st.stop()
 
 # ------------------------------------------------------------------ KPI helpers
-total_bills = len(f)
+total_bills = int((f["coupon_cat"] != "GSC").sum())   # purchase bills only (exclude gift bills)
 # GSC gift bills are SEPARATE redemption bills (earned by a qualifying purchase),
 # so the qualifying base = purchase bills with NET-PAYABLE ≥₹149 that are NOT GSC gift bills.
 purch = f[f["coupon_cat"] != "GSC"]
@@ -239,7 +239,8 @@ tabs = st.tabs(["📊 Overview", "🏬 Stores", "🎯 Tiers & Products", "🕐 H
 with tabs[0]:
     st.markdown("#### 📦 Bills & qualifying base")
     a = st.columns(5)
-    a[0].metric("Total bills", f"{total_bills:,}")
+    a[0].metric("Total bills", f"{total_bills:,}",
+                help="Purchase bills — excludes separate GSC gift-redemption bills.")
     a[1].metric("Bills ≥ ₹149", f"{bills_ge149:,}",
                 help="Qualifying purchases with net-payable ≥₹149 (excludes separate GSC gift bills). "
                      "= GSC + Rewards + Other + No-coupon.")
@@ -303,7 +304,7 @@ with tabs[1]:
         none_n = max(0, ge149 - gsc_n - rew_n - oth_n)            # availed nothing
         rows.append({
             "Store": sname, "ID": sid,
-            "Total bills": len(grp),
+            "Total bills": int((grp.coupon_cat != "GSC").sum()),
             "Bills ≥149": ge149,
             "GSC gift": gsc_n,
             "GSC Red %": round(gsc_n / ge149 * 100, 1) if ge149 else 0.0,
@@ -403,7 +404,7 @@ with tabs[3]:
     section("Bills by hour (coupon usage)")
     hr = f.groupby("bill_hour").apply(
         lambda g: pd.Series({
-            "Total bills": len(g),
+            "Total bills": int((g.coupon_cat != "GSC").sum()),
             "Bills ≥149": int(((g.coupon_cat != "GSC") & (g.net_payable >= 149)).sum()),
             "GSC gift": int((g.coupon_cat == "GSC").sum()),
             "Rewards": int(((g.coupon_cat == "Rewards") & (g.net_payable >= 149)).sum()),
@@ -426,14 +427,15 @@ with tabs[3]:
 
 # ============================================================== RAW DATA
 with tabs[4]:
-    section("Filtered bills")
-    st.caption(f"{len(f):,} bills match the current filters.")
+    section("Filtered purchase bills")
+    raw = f[f["coupon_cat"] != "GSC"]   # exclude separate GSC gift-redemption bills (matches Total bills)
+    st.caption(f"{len(raw):,} purchase bills match the current filters "
+               "(excludes separate GSC gift bills; gift detail is in the Tiers & Products tab).")
     show_cols = [
-        "bill_id", "bill_date", "bill_hour", "store_name", "bill_total",
+        "bill_id", "bill_date", "bill_hour", "store_name", "bill_total", "net_payable",
         "coupon_cat", "order_type", "patient_type",
-        "gift_tier", "gift_threshold", "gift_product_name", "gift_is_free", "gift_net_payable",
     ]
-    st.dataframe(f[show_cols].sort_values(["bill_date", "bill_hour"]),
+    st.dataframe(raw[show_cols].sort_values(["bill_date", "bill_hour"]),
                  width="stretch", hide_index=True, height=520)
     st.download_button("⬇ Download filtered bills (CSV)",
-                       f[show_cols].to_csv(index=False).encode(), "filtered_bills.csv", "text/csv")
+                       raw[show_cols].to_csv(index=False).encode(), "filtered_bills.csv", "text/csv")
