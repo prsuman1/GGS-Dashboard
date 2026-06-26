@@ -250,12 +250,15 @@ with tabs[0]:
     a[4].metric("Other coupon", f"{n_oth:,}")
 
     st.markdown("#### 🎁 GSC gift redemptions")
-    b = st.columns(5)
+    rg_rate = ((n_rew + n_gsc) / bills_ge149 * 100) if bills_ge149 else 0
+    b = st.columns(6)
     b[0].metric("GSC gift redeemed", f"{n_gsc:,}", help="Separate gift bills (the reward)")
     b[1].metric("Redemption rate", f"{redempt_rate:.1f}%", help="GSC gift ÷ qualifying bills ≥ ₹149")
-    b[2].metric("Free products", f"{n_free:,}")
-    b[3].metric("Discounted products", f"{n_disc:,}")
-    b[4].metric("₹ collected (gift bills)", f"₹{collected:,.0f}")
+    b[2].metric("Rewards + GSC Red %", f"{rg_rate:.1f}%",
+                help="(Rewards coupon + GSC gift) ÷ qualifying bills ≥ ₹149")
+    b[3].metric("Free products", f"{n_free:,}")
+    b[4].metric("Discounted products", f"{n_disc:,}")
+    b[5].metric("₹ collected (gift bills)", f"₹{collected:,.0f}")
 
     st.markdown("---")
     c1, c2 = st.columns(2)
@@ -303,6 +306,7 @@ with tabs[1]:
             "Bills ≥149": ge149,
             "GSC gift": gsc_n,
             "GSC Red %": round(gsc_n / ge149 * 100, 1) if ge149 else 0.0,
+            "Rew+GSC Red %": round((rew_n + gsc_n) / ge149 * 100, 1) if ge149 else 0.0,
             "Rewards": rew_n,
             "Other": oth_n,
             "No coupon": none_n,
@@ -317,12 +321,15 @@ with tabs[1]:
     # Redemption % on the TOTAL row must be recomputed from totals, not summed.
     tg, te = sdf["GSC gift"].sum(), sdf["Bills ≥149"].sum()
     total_row["GSC Red %"] = round(tg / te * 100, 1) if te else 0.0
+    total_row["Rew+GSC Red %"] = round((tg + sdf["Rewards"].sum()) / te * 100, 1) if te else 0.0
     sdf_disp = pd.concat([sdf, pd.DataFrame([total_row])], ignore_index=True)
     st.dataframe(
         sdf_disp, width="stretch", hide_index=True,
         column_config={
             "GSC Red %": st.column_config.NumberColumn(
                 "GSC Red %", help="GSC gift ÷ qualifying Bills ≥149", format="%.1f%%"),
+            "Rew+GSC Red %": st.column_config.NumberColumn(
+                "Rew+GSC Red %", help="(Rewards + GSC gift) ÷ qualifying Bills ≥149", format="%.1f%%"),
             "Bills ≥149": st.column_config.NumberColumn(
                 "Bills ≥149", help="Qualifying purchases ≥₹149 (excl. separate GSC gift bills) "
                                    "= GSC + Rewards + Other + No coupon"),
