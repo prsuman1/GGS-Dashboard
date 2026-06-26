@@ -104,6 +104,46 @@ def tier_to_threshold(prefix):
     return None
 
 
+def reward_bill_ids(stores, date_from, date_to):
+    """Authoritative set of Rewards bill-ids = union of:
+      (1) promo-based: promo code flagged is-reward-promo = 1 in the master, and
+      (2) wallet-based: a REWARD-lot wallet DEBIT > 0 against the bill.
+    NOTE: GSC gift codes are also is-reward-promo = 1, so this set DOES include
+    GSC gift bills — they are kept as GSC by the coupon_cat priority downstream.
+    """
+    stores_t = tuple(stores)
+    ids = set()
+    # (1) promo-based
+    _, rows = run('''
+        select distinct s."bill-id"
+        from "prod2-generico".sales s
+        join "prod2-generico"."promo-codes" pcc on s."promo-code" = pcc."promo-code"
+        where s."bill-flag" = 'gross'
+          and s."store-id" in %s
+          and s."created-date" between %s and %s
+          and pcc."is-reward-promo" = 1
+    ''', (stores_t, date_from, date_to))
+    ids.update(r[0] for r in rows)
+    promo_n = len(ids)
+    # (2) wallet-based (REWARD-lot DEBIT > 0)
+    _, rows = run('''
+        select b.id as bill_id
+        from "prod2-generico"."bills-1" b
+        join "prod2-generico"."wallet-transactions"    wt on wt.reference_id = b.id
+        join "prod2-generico"."wallet-lot-allocations" wa on wa.txn_id      = wt.txn_id
+        join "prod2-generico"."wallet-lots"            wl on wl.lot_id       = wa.lot_id
+        where wt."txn_type" = 'DEBIT' and wl."source_type" = 'REWARD'
+          and wt.reference_id ~ '^[0-9]+$'
+          and b."store-id" in %s
+          and date(b."created-at") between %s and %s
+        group by b.id
+        having sum(wa.amount) > 0
+    ''', (stores_t, date_from, date_to))
+    ids.update(r[0] for r in rows)
+    print(f"reward bill-ids: {len(ids)} total (promo={promo_n}, +wallet adds {len(ids)-promo_n})")
+    return ids
+
+
 def build(date_from, date_to):
     catalog = {int(k): v for k, v in json.loads(CATALOG_PATH.read_text()).items()}
     stores = discover_stores(date_from, date_to)
@@ -169,6 +209,12 @@ def build(date_from, date_to):
     for c in ("hd", "ecom", "gsc", "rewards", "other", "is_new_patient"):
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype(int)
 
+    # NEW Rewards definition: promo is-reward-promo=1 OR wallet REWARD debit>0.
+    # Overrides the old ^ZR[DF] regex flag. GSC gift bills are also in this set but
+    # stay categorised as GSC via the coupon_cat priority (GSC > Rewards > Other).
+    reward_ids = reward_bill_ids(stores, date_from, date_to)
+    df["rewards"] = df["bill_id"].isin(reward_ids).astype(int)
+
     # Order type: Non-walking = home delivery OR ecom OR online (zeno) order
     has_zeno = df["zeno_order_id"].notna()
     df["order_type"] = (
@@ -189,6 +235,10 @@ def build(date_from, date_to):
         return "None"
     df["coupon_cat"] = df.apply(coupon_cat, axis=1)
     df["is_gift"] = df["coupon_cat"] == "GSC"
+    # Verify GSC gift bills are NOT counted as Rewards (priority guard).
+    leak = int(((df["coupon_cat"] == "GSC") & (df["rewards"] == 1)).sum())
+    print(f"coupon_cat: GSC bills also in reward-set = {leak} (all kept as GSC, NOT Rewards); "
+          f"Rewards category bills = {int((df['coupon_cat']=='Rewards').sum())}")
 
     # Gift detail
     df["gift_segment"] = df["gift_tier"].apply(
