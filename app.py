@@ -29,6 +29,16 @@ THRESHOLDS = [149, 249, 349, 499, 699, 999, 1599, 1999]
 COUPON_COLORS = {"GSC": "#2563eb", "Rewards": "#16a34a", "Other": "#f59e0b", "None": "#cbd5e1"}
 FREE_COLORS = {"Free": "#16a34a", "Discounted": "#f59e0b"}
 
+# Gift price ladder (net-payable paid for the gift): free + token tiers, else "Other".
+PRICE_LADDER = [0, 5, 9, 15, 19, 29, 59, 79]
+PRICE_BUCKETS = ["Free (₹0)", "₹5", "₹9", "₹15", "₹19", "₹29", "₹59", "₹79", "Other"]
+
+
+def price_bucket(p):
+    if p == 0:
+        return "Free (₹0)"
+    return f"₹{int(p)}" if p in PRICE_LADDER else "Other"
+
 st.set_page_config(layout="wide", page_title="GGS Free-Gift Dashboard", page_icon="🎁")
 
 # ------------------------------------------------------------------ styling
@@ -373,31 +383,88 @@ with tabs[2]:
 
         st.markdown("---")
         section("Product distribution — what customers took")
-        pg = gift.dropna(subset=["gift_product_id"]).groupby(
-            ["gift_product_id", "gift_product_name", "gift_product_tier"], dropna=False)
+        gp = gift.dropna(subset=["gift_product_id"]).copy()
+        gp["price"] = pd.to_numeric(gp["gift_net_payable"], errors="coerce").fillna(0)
         prows = []
-        for (pid, pname, ptier), grp in pg:
+        for (pid, pname, ptier), grp in gp.groupby(
+                ["gift_product_id", "gift_product_name", "gift_product_tier"], dropna=False):
             thr = THRESHOLDS[TIERS.index(ptier)] if ptier in TIERS else None
+            rev = float(grp["price"].sum())
             prows.append({
+                "Drug ID": int(pid),
                 "Product": pname,
                 "Times taken": len(grp),
                 "Free": int((grp.gift_is_free == True).sum()),
                 "Discounted": int((grp.gift_is_free == False).sum()),
+                "Revenue (₹)": rev,
+                "Avg ₹": round(rev / len(grp), 1),
                 "Product tier": f"{ptier} (≥₹{thr})" if ptier else "?",
             })
         pdf = pd.DataFrame(prows).sort_values("Times taken", ascending=False).reset_index(drop=True)
-        c1, c2 = st.columns([1, 1])
+        c1, c2 = st.columns([1.3, 1])
         with c1:
-            st.dataframe(pdf, width="stretch", hide_index=True, height=460)
+            st.dataframe(pdf, width="stretch", hide_index=True, height=460,
+                         column_config={
+                             "Drug ID": st.column_config.NumberColumn("Drug ID", format="%d"),
+                             "Revenue (₹)": st.column_config.NumberColumn("Revenue (₹)", format="₹%.0f"),
+                             "Avg ₹": st.column_config.NumberColumn("Avg ₹", format="₹%.1f")})
             st.download_button("⬇ Download product report (CSV)",
                                pdf.to_csv(index=False).encode(), "product_report.csv", "text/csv")
         with c2:
             top = pdf.head(15).sort_values("Times taken")
             fig = px.bar(top, x="Times taken", y="Product", orientation="h",
                          color_discrete_sequence=["#2563eb"], height=460,
-                         title="Top 15 products")
+                         title="Top 15 products by units")
             fig.update_layout(margin=dict(t=50, l=10), yaxis_title="")
             st.plotly_chart(fig, width="stretch")
+
+        # ---------------------------------------------------------- price breakdown
+        st.markdown("---")
+        section("💰 Price breakdown — units sold at each price")
+        st.caption("Each cell = units of that product sold at that price. "
+                   "₹0 = free; others = the token the customer paid. "
+                   "Revenue = total net collected for the product.")
+        gp["bucket"] = gp["price"].apply(price_bucket)
+
+        # overall price-mix bar (units per price point)
+        mix = (gp["bucket"].value_counts()
+               .reindex(PRICE_BUCKETS, fill_value=0).reset_index())
+        mix.columns = ["Price", "Units"]
+        figm = px.bar(mix, x="Price", y="Units", text="Units", height=260,
+                      color_discrete_sequence=["#16a34a"], title="Units by price point (all products)")
+        figm.update_traces(textposition="outside")
+        figm.update_layout(margin=dict(t=50, b=10), xaxis_title="", yaxis_title="Units")
+        st.plotly_chart(figm, width="stretch")
+
+        # product × price matrix
+        mat = (gp.pivot_table(index="gift_product_name", columns="bucket",
+                              values="bill_id", aggfunc="count", fill_value=0)
+                 .reindex(columns=PRICE_BUCKETS, fill_value=0))
+        mat["Units"] = mat.sum(axis=1)
+        # keep exact float so totals reconcile; the Styler formats it to ₹ at display
+        mat["Revenue (₹)"] = gp.groupby("gift_product_name")["price"].sum()
+        mat = mat.sort_values("Revenue (₹)", ascending=False)
+        mat.index.name = "Product"
+        mat_disp = mat.reset_index()
+        # add Drug ID (one id per product name)
+        id_map = gp.groupby("gift_product_name")["gift_product_id"].first()
+        mat_disp.insert(0, "Drug ID", mat_disp["Product"].map(id_map).astype("Int64"))
+
+        # Manual green heatmap shading (avoids the matplotlib dependency of background_gradient).
+        vmax = int(mat[PRICE_BUCKETS].to_numpy().max()) if len(mat) else 0
+
+        def _shade(v):
+            if not vmax or not v:
+                return ""
+            a = 0.10 + 0.65 * (v / vmax)
+            return f"background-color: rgba(22,163,74,{a:.2f})"
+
+        sty = mat_disp.style.format({"Revenue (₹)": "₹{:,.0f}", "Drug ID": "{:d}"})
+        for col in PRICE_BUCKETS:
+            sty = sty.map(_shade, subset=[col])
+        st.dataframe(sty, width="stretch", hide_index=True, height=480)
+        st.download_button("⬇ Download price breakdown (CSV)",
+                           mat_disp.to_csv(index=False).encode(), "price_breakdown.csv", "text/csv")
 
 # ============================================================== HOURLY
 with tabs[3]:
