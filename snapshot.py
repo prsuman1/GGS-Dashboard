@@ -164,7 +164,11 @@ def build(date_from, date_to):
                       and not (s."promo-code" ~ '{GSC_RE}')
                       and not (s."promo-code" ~ '{REWARDS_RE}')
                      then 1 else 0 end)                            as other,
-            max(case when s."first-bill-date" = s."created-date" then 1 else 0 end) as is_new_patient,
+            -- New = patient's first-ever bill. On the latest (lagging) day the new
+            -- patient's first-bill-date isn't stamped yet (NULL), so treat NULL as New
+            -- too. On enriched days NULL is always 0, so history is unaffected.
+            max(case when s."first-bill-date" = s."created-date"
+                       or s."first-bill-date" is null then 1 else 0 end) as is_new_patient,
             max(s."store-name")                                    as store_name,
             -- gift line details (max picks the single gift row's values)
             max(case when s."promo-code" ~ '{GSC_RE}' and s."promo-discount" is not null
